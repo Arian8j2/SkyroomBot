@@ -1,5 +1,4 @@
 from requests import post
-from base64 import b64decode
 from json import loads, dumps
 from time import time
 from websocket import WebSocketApp
@@ -40,7 +39,7 @@ class SkyroomBot:
         if res.status_code != 200:
             raise Exception("Invalid skyroom url")
 
-        res = loads(b64decode(res.content))["result"]
+        res = loads(res.content)["result"]
         self.customer_id = res["customer_id"]
         self.room_id = res["room_id"]
         self.websocket_addr = str(res["server"]).replace("https", "wss")
