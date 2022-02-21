@@ -1,24 +1,30 @@
+import logging
 from requests import post
 from json import loads, dumps
 from time import time
 from websocket import WebSocketApp
 from threading import Thread
+from typing import Callable
 
 class SkyroomBot:
-    def __init__(self, url: str, username: str, password: str):
+    def __init__(self, url: str, username: str, password: str, token: str, on_message: Callable[[str], None] = None):
         self.is_opened = False
         self.username = username
         self.password = password
+        self.token = token
 
         self.url = url
         self.gather_data_from_url()
 
+        self.logger = logging.getLogger(__class__.__name__)
+        if on_message == None:
+            on_message = self.on_message
+
         self.ws = WebSocketApp(self.websocket_addr, \
             on_open    = lambda ws: self.on_open(), \
-            on_message = lambda ws, msg: self.on_message(msg),\
+            on_message = lambda ws, msg: on_message(msg),\
             on_close   = lambda ws: self.on_close()
         )
-        self.ws.run_forever()
 
     def gather_data_from_url(self):
         if self.url[-1] == '/':
@@ -50,7 +56,14 @@ class SkyroomBot:
         Thread(target=self.keep_alive).start()
 
     def on_message(self, msg: str):
-        print(msg)        
+        self.logger.info(msg)
+
+    def send_chat(self, msg):
+        msg_info = {
+            "id": int(time()),
+            "text": msg
+        }
+        self.ws.send(dumps(["s", "chat", "message-new", msg_info]))
 
     def on_close(self):
         self.is_opened = False
@@ -64,6 +77,7 @@ class SkyroomBot:
                 "customer_id": self.customer_id,
                 "username": self.username,
                 "password": self.password,
+                "token": self.token,
                 "nickname": "",
                 "platform": {
                     "version":"12.4.8",
@@ -74,7 +88,7 @@ class SkyroomBot:
         ]
 
         self.ws.send(dumps(payload))
-        print("[Bot] Joined room")
+        self.logger.info("Joined room")
 
     def keep_alive(self):
         alive_expire = time() + 5
@@ -83,4 +97,17 @@ class SkyroomBot:
                 self.ws.send("imalive")
                 alive_expire = time() + 5
         
-        print("[Bot] Connection closed!")
+        self.logger.info("Connection closed!")
+
+if __name__ == "__main__":
+    url = input("url e kellaseto vared kon (https://www.skyroom.online/ch/madresegholam/shimi): ")
+    username = input("username (140210743, skip if using token): ")
+    password = input("password (140210743, skip if using token): ")
+
+    token = str()
+    if len(username) == 0:
+        token = input("token (140210743, skip if using token): ")
+
+    logging.basicConfig(level=logging.INFO, format="[%(name)s] %(message)s")
+    bot = SkyroomBot(url, username, password, token)
+    bot.ws.run_forever()
