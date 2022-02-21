@@ -10,8 +10,16 @@ pip install -r requirements.txt
 ```
 
 ## How to use
-Now just run script:
-`python skyroom_bot.py`
+Run `skyroom_bot.py` for command line interface:
+```shell
+python skyroom_bot.py
+```
+
+or `gui.py` for graphical interface
+```shell
+python gui.py
+```
+(Thanks to [mparsabadri](https://github.com/mparsabadri/) for helping with gui)
 
 It asks for credentials to login, There are multiple ways to loin to class and you can say it by looking at url, e.g if url is like `https://www.skyroom.online/ch/madresegholam/shimi` you just pass **url**, **username**, **password** to bot and you are good to go.
 
